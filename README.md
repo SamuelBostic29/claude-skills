@@ -25,6 +25,16 @@ cp -r skills/plan-save ~/.claude/skills/
 
 Claude Code picks it up automatically. Invoke it by name, or let it trigger from its `description`.
 
+## Creating a new skill
+
+Start from the template — it's pre-structured for the quality bar below, so a new skill begins correct-by-construction:
+
+```bash
+cp -r template skills/<your-skill-name>
+```
+
+The template ([`template/`](template)) lays out the three layers of **progressive disclosure** — annotated frontmatter and instructions in `SKILL.md`, an optional `references/` file for large content that loads only on demand, and an `evals/` slot so every skill ships a way to prove it works. Fill in the `<ANGLE_BRACKET>` placeholders, delete what you don't need, and you've got a skill that matches the rest of the repo.
+
 ## Design principles
 
 What every skill in this repo aims for:
