@@ -21,7 +21,7 @@ Without it, "add DTOs for this entity" tends to become a reflexive 1:1 dump — 
   - [ ] Recommends a **sane set**: a detail DTO; a **List DTO** (justified by the `Reviews` collection / columns a list omits); a **Reference DTO** (other entities link to Product); plus **Create + Update** inputs.
   - [ ] Read DTOs **omit `RowVersionHash`** (internal); the **Create input omits `Id` / `CreatedUtc` / `RowVersionHash`**.
   - [ ] Mappers are **hand-written** (`ToDto()` / `ToEntity()`-style) — **no AutoMapper / Mapster**.
-  - [ ] **Update mapper mutates a tracked entity in place** (never `new`); Create mapper news up an entity without Id/audit.
+  - [ ] **Update mapper mutates a tracked entity in place** (never `new`); Create mapper instantiates an entity without Id/audit.
   - [ ] To-one `Category` maps via a ref/detail DTO; to-many `Reviews` maps to a `List<…>`, null-guarded.
 
 ### Case 2 — portable: placeholder namespaces, asks instead of guessing conventions

@@ -127,4 +127,6 @@ public static class ProductMappingExtensions
 }
 ```
 
+The snippet shows `Product`'s mappers only — `e.Category.ToRefDto()` and `r.ToListDto()` call the *related* types' own mappers (`Category` → `CategoryRefDto`, `ProductReview` → `ProductReviewListDto`), defined alongside those types, so it isn't self-contained/compilable.
+
 Note what the mappers do *not* touch on update: `Id`, `CreatedUtc`, `RowVersionHash` — server-owned and internal, never set from a client payload.

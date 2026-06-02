@@ -49,11 +49,13 @@ The failure mode this skill exists to prevent is the **reflexive 1:1 dump**: a s
 
 5. **Generate the DTOs.** One file per the repo's grouping; namespace from the repo, or the `<RootNamespace>.<Feature>.Dtos` placeholder when none is detectable. Read DTOs expose only safe, needed fields; **input DTOs exclude server-owned fields** (Id, audit, computed) and carry validation per the repo's convention. Use the detected `record` / `class` style.
 
-6. **Generate the mapping methods.** Hand-written, in the detected style: entity→DTO for each read variant; input→entity for writes — **Create news up a new entity; Update mutates the existing tracked entity in place (never `new`)** so EF change-tracking works. Map to-one navigations via their Reference/Detail DTO, to-many via `List<…ListDto>` / `List<…RefDto>`, null-guard optional navigations, and never map a field a variant deliberately omits. **No mapping library.**
+6. **Generate the mapping methods.** Hand-written, in the detected style: entity→DTO for each read variant; input→entity for writes — **Create instantiates a new entity; Update mutates the existing tracked entity in place (never `new`)** so EF change-tracking works. Map to-one navigations via their Reference/Detail DTO, to-many via `List<…ListDto>` / `List<…RefDto>`, null-guard optional navigations, and never map a field a variant deliberately omits. **No mapping library.**
 
 7. **Report and stop.** Summarize per Output format. Do **not** build, run, or commit. Stop.
 
 ## Output format
+
+Report only the variants you actually generated — you right-size the set, so a line below for a DTO you didn't create would name a file that doesn't exist. Omit any line that doesn't apply.
 
 ```
 DTOs for <Entity>: <variants chosen>  — <one-line why this set>
