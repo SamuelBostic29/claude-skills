@@ -36,11 +36,12 @@ Two failure modes to guard against: **(1) silently running as the wrong account*
 
 ### Step 1 — Resolve the GitHub user (the ONLY place this skill touches accounts)
 
-1. Enumerate authed accounts: run `gh auth status` and parse every `Logged in to github.com account <login>` line; note which shows `Active account: true`.
-2. Determine the **target user**:
-   - If the request named an explicit username, use it.
+1. Enumerate authed accounts: run `gh auth status` and read the login from every `Logged in to github.com` line — accept both the current `account <login>` and the older `as <login>` wordings (grab the login token either way); note which shows `Active account: true`.
+2. Determine the **account to report on** — always one of the authed accounts (this skill reports on an account it is logged in as):
+   - If the request named a username **matching an authed account**, use it (skips the prompt).
+   - If the request named a username that is **not** an authed account, stop and explain that this skill reports only on an account it's authed as — have the user pick an authed account or `gh auth login` as that user.
    - Else if exactly **one** account is authed, use it — no prompt.
-   - Else (**two or more**), ask via `AskUserQuestion` — "Which GitHub account should this report run as?" — one option per authed login, marking the active one. Use the choice.
+   - Else (**two or more**), ask via `AskUserQuestion` which authed account to run as (one option per login, the active one marked).
 3. **Switch once, here:** if the target isn't already the active account, run `gh auth switch --user <target>`. This is the *only* `gh auth switch` the skill performs.
 4. If **zero** accounts are authed, stop and tell the user to run `gh auth login`.
 
@@ -63,15 +64,15 @@ mkdir -p <OUTPUT_DIR>          # default ~/pr-stats
 ### Step 4 — Find the PRs (bulk mode)
 
 ```
-gh search prs --author <USER> --created "<SINCE>..<UNTIL>" --limit 100 \
+gh search prs --author <USER> --created "<SINCE>..<UNTIL>" --limit 1000 \
   --json number,title,repository,state,createdAt,closedAt,url
 ```
 
 - If a scope `<OWNER>` was given, filter client-side to entries whose `repository.nameWithOwner` starts with `<OWNER>/`. (Combining `--owner` with `--author` on `gh search prs` is unreliable — filter in code instead.)
 - 0 results → write a minimal "no PRs in window" report and stop at Step 10.
-- Hit the `--limit 100` cap → retry `--limit 200` and note in the header that the cap may have been hit.
+- If the result count reaches the `--limit` cap (1000 — `gh search`'s maximum), add a **"results may be incomplete"** note to the report header; don't do a second pass.
 
-**Single-PR mode:** skip the search; take the given PR (derive the repo from `git remote get-url origin` if only a number was given) and go straight to Step 5 for that one PR.
+**Single-PR mode:** skip the search; take the given PR. If only a number was given, derive the repo from `git remote get-url origin`; if that fails (not in a git clone, or origin isn't a GitHub URL), **ask for `owner/repo` via `AskUserQuestion`** instead of guessing. Then go straight to Step 5 for that one PR.
 
 ### Step 5 — Gather per-PR detail (parallelize)
 
@@ -79,24 +80,26 @@ For each PR `<owner>/<repo>#<num>`, issue these **in parallel within one tool-us
 
 ```
 a. gh pr view <num> --repo <owner>/<repo> \
-     --json number,title,state,createdAt,closedAt,mergedAt,url,body,headRefName,baseRefName,additions,deletions,changedFiles,commits,reviews,isDraft,author,labels
+     --json number,title,state,createdAt,closedAt,mergedAt,url,body,headRefName,baseRefName,additions,deletions,changedFiles,commits,isDraft,author,labels
 b. gh api 'repos/<owner>/<repo>/pulls/<num>/comments' --paginate \
      --jq '[.[] | {login:.user.login, user_type:.user.type, body, path, line, created_at}]'
 c. gh api 'repos/<owner>/<repo>/issues/<num>/comments' --paginate \
      --jq '[.[] | {login:.user.login, user_type:.user.type, body, created_at}]'
 d. gh api 'repos/<owner>/<repo>/pulls/<num>/files' --paginate \
      --jq '[.[] | {filename, additions, deletions, changes, status}]'
+e. gh api 'repos/<owner>/<repo>/pulls/<num>/reviews' --paginate \
+     --jq '[.[] | {login:.user.login, user_type:.user.type, body, state}]'
 ```
 
 `--paginate` is required so high-activity PRs don't lose comments or files past the first page.
 
 ### Step 6 — Tally human-reviewer comments
 
-Combine three sources per PR: inline review comments (5b), conversation comments (5c), and non-empty review bodies from `pr view`'s `reviews[]`. **Exclude** an entry if ANY of these holds:
+Combine three sources per PR: inline review comments (5b), conversation comments (5c), and non-empty review bodies from the reviews API (5e). **Exclude** an entry if ANY of these holds:
 
 - `user_type == "Bot"`
 - login ends in `[bot]` or `-bot` (case-insensitive)
-- login is in the generic automation list (case-insensitive): `github-actions`, `dependabot`, `codecov`, `codecov-commenter`, `mergify`, `renovate`, `snyk-bot`, `claude`, `copilot`
+- login is in the generic automation list (case-insensitive): `github-actions`, `dependabot`, `codecov`, `codecov-commenter`, `mergify`, `renovate`, `snyk-bot`
 - login is in the user-supplied extra-automation list from Step 2 — **some automation posts as `user.type == "User"`**, so this explicit list matters
 - login == the resolved author (the author's own comments don't count)
 
@@ -107,7 +110,7 @@ Remaining entries are **human reviewer comments**. Group by login and count.
 Run (case-insensitive, multiline) over `body`:
 
 ```
-(?i)(?:closes|fixes|resolves)\s+(?:([\w-]+\/[\w-]+))?#(\d+)
+(?i)(?:closes|fixes|resolves):?\s+(?:([\w-]+\/[\w-]+)\s*)?#(\d+)
 ```
 
 Process **every** match (a PR can close several). Group 1 = optional `owner/repo`, group 2 = issue number; default to the PR's own repo when there's no prefix. For each:
@@ -139,7 +142,7 @@ Build the full markdown in memory (template below), then write it **once** to `<
 **User**: <USER>
 **Scope**: <OWNER, or "all repos">
 **Window**: <SINCE> to <UNTIL> (<N> days)
-**Generated**: <YYYY-MM-DD HH:mm>
+**Generated**: <YYYY-MM-DD HH:mm> UTC
 
 ---
 
