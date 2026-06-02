@@ -12,6 +12,7 @@ Every skill here is built to the same bar: **self-contained, opinionated, and co
 | [`plan-next`](skills/plan-next) | Execute the next incomplete phase of a saved plan — implement it, update the file, then stop. |
 | [`plan-review`](skills/plan-review) | A convergence-oriented review of a saved plan: verdict first, blockers capped, "I don't understand" routed to questions instead of nitpicks. |
 | [`draft-pr`](skills/draft-pr) | Finish a unit of work into a draft PR: stage **only the files changed this session** (never secret-bearing local config), commit, push, write a templated description, and open it as a draft. |
+| [`dbcontext-query`](skills/dbcontext-query) | A **.NET/EF Core example you adapt to your stack**: generate a `DbContext` data-access partial (get / list / add / update / remove / paginate) for one entity, matched to your repo's conventions — every namespace, context, and base type a placeholder you set. |
 
 More skills are in progress — see [the issues](../../issues) for the roadmap.
 
