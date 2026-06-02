@@ -110,10 +110,10 @@ Remaining entries are **human reviewer comments**. Group by login and count.
 Run (case-insensitive, multiline) over `body`:
 
 ```
-(?i)(?:closes|fixes|resolves):?\s+(?:([\w-]+\/[\w-]+)\s*)?#(\d+)
+(?i)(?:closes|fixes|resolves):?\s+#(\d+)
 ```
 
-Process **every** match (a PR can close several). Group 1 = optional `owner/repo`, group 2 = issue number; default to the PR's own repo when there's no prefix. For each:
+Process **every** match (a PR can close several). The capture is the issue number; the issue is always in the PR's own repo — this skill doesn't handle cross-repo `owner/repo#N` references. For each:
 
 ```
 gh issue view <num> --repo <owner>/<repo> \
@@ -128,7 +128,7 @@ A single paragraph (4–6 sentences) per fetched issue, focused on: the problem 
 
 ### Step 9 — Compute aggregate stats (bulk mode only)
 
-Across the window: total PRs by state (`merged` / `open` / `closed-without-merge` / `draft`); total additions/deletions; total files changed; total commits; average time-to-merge over merged PRs (days, 1 dp); average human-reviewer comments per PR (1 dp); repos worked in (`owner/repo: <count>`, descending).
+First **classify each PR into exactly one state bucket** so drafts aren't double-counted (precedence): `merged` (has `mergedAt`) → `closed-without-merge` (closed, not merged) → `draft` (open and `isDraft`) → `open` (open and not draft). Both open and draft PRs are included — each counted once. Then, across the window: total PRs with that per-state breakdown; total additions/deletions; total files changed; total commits; average time-to-merge over merged PRs (days, 1 dp); average human-reviewer comments per PR (1 dp); repos worked in (`owner/repo: <count>`, descending).
 
 ### Step 10 — Generate and write the report, then stop
 
