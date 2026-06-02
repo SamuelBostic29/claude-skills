@@ -1,0 +1,16 @@
+# GitHub Linguist language-stats overrides.
+#
+# This is a Claude Code skills repo: the substance is Markdown (SKILL.md prompt
+# design and references). Any code under skills/ and template/ is only an
+# illustrative sample/fixture, so it should not drive the language bar.
+
+# Treat everything under the skill and template trees as documentation, so
+# embedded sample code (e.g. the C# fixtures) is excluded from the stats.
+skills/**    linguist-documentation
+template/**  linguist-documentation
+
+# Markdown is the actual content of this repo, so keep it counted. Un-mark it as
+# documentation (it lives under the trees above) and force Linguist to detect it
+# — Markdown is a "prose" language and is omitted from the language bar by default.
+*.md         linguist-documentation=false
+*.md         linguist-detectable=true
