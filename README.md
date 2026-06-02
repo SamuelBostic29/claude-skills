@@ -11,6 +11,7 @@ Every skill here is built to the same bar: **self-contained, opinionated, and co
 | [`plan-save`](skills/plan-save) | Restructure a plan into a persistent, phase-tracked markdown file you can execute across sessions. |
 | [`plan-next`](skills/plan-next) | Execute the next incomplete phase of a saved plan — implement it, update the file, then stop. |
 | [`plan-review`](skills/plan-review) | A convergence-oriented review of a saved plan: verdict first, blockers capped, "I don't understand" routed to questions instead of nitpicks. |
+| [`draft-pr`](skills/draft-pr) | Finish a unit of work into a draft PR: stage **only the files changed this session** (never secret-bearing local config), commit, push, write a templated description, and open it as a draft. |
 
 More skills are in progress — see [the issues](../../issues) for the roadmap.
 
