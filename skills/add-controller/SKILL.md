@@ -1,6 +1,6 @@
 ---
 name: add-controller
-version: 1.0.0
+version: 0.1.0
 description: |
   Use when adding the HTTP route/handler (controller) for a resource — wiring an
   endpoint that parses and validates the request, calls the service (or DAO),
@@ -46,9 +46,9 @@ The failure mode this skill exists to prevent is the **fat controller**: busines
 
 4. **Write the handler/route.** Mirror the reference: the same base (e.g. a `MethodView`/route-init helper), the same DI/constructor, the same verb methods, the same validation → status-code mapping, the same response shaping. For a concrete request-pipeline before→after and the conventions checklist, read `references/mirroring-a-handler.md`.
 
-5. **Register it exactly as siblings are registered** — the same blueprint/url-prefix mechanism. Do not introduce a new registration scheme.
+5. **Register it** (new-handler case only) — exactly as siblings are registered, the same blueprint/url-prefix mechanism. Do not introduce a new registration scheme. Adding a verb/route to an existing handler needs no new registration.
 
-6. **Keep the layer boundary clean.** Parse and validate the request → call the service (or the DAO, if the repo wires controllers directly to DAOs) → return the standardized response. No business rules, no SQL.
+6. **Verify the boundary before finishing.** Confirm the handler only parses/validates the request, delegates to the service (or the DAO, if the repo wires controllers directly to DAOs), and returns the standardized response — with no business rules or SQL leaked in.
 
 7. **Stop.** Done = the routes exist, the handler mirrors the reference, and it is registered the standard way. Do not write the service, the DAO, or the tests. Report the routes, the handler file, the handler you mirrored, and what it calls.
 

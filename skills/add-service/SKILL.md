@@ -1,6 +1,6 @@
 ---
 name: add-service
-version: 1.0.0
+version: 0.1.0
 description: |
   Use when adding the business-logic / service layer for a resource — a service
   class (or a method on one) that orchestrates repositories/DAOs, applies
@@ -47,11 +47,11 @@ The failure mode this skill exists to prevent is the **misplaced logic**: busine
 
 4. **Write the service / method.** Mirror the reference: constructor/DI shape (repos injected), async vs sync style, pagination and result-shaping helpers, the constants block (keep the documented caps and their rationale), error/exception types, and logging. For a concrete orchestration before→after and the boundary checklist, read `references/mirroring-a-service.md`.
 
-5. **Wire it in via the repo's existing factory/DI** — the same registration the sibling services use. Do not introduce a new wiring mechanism.
+5. **Wire it in** (new-service case only) — via the repo's existing factory/DI, the same registration the sibling services use. Do not introduce a new wiring mechanism. Adding a method to an existing service needs no new wiring.
 
-6. **Keep the layer boundary clean.** Get data only through repositories/DAOs; if a needed query is missing, add it with **add-data-access**, not inline. Return domain objects/dicts, never HTTP responses. No SQL, no request parsing.
+6. **Verify the boundary before finishing.** Confirm the service reaches data only through repositories/DAOs (a missing query is an **add-data-access** task, not inline SQL) and returns domain objects/dicts — never HTTP responses or request parsing.
 
-7. **Stop.** Done = the service (or method) exists, mirrors the reference, and imports cleanly. Do not write the DAO, the route, or the tests. Report the files, the service you mirrored, and the repos it orchestrates.
+7. **Stop.** Done = the service (or method) exists, mirrors the reference, and is internally consistent (names/imports resolve by inspection — this skill runs no build). Do not write the DAO, the route, or the tests. Report the files, the service you mirrored, and the repos it orchestrates.
 
 ## Output format
 

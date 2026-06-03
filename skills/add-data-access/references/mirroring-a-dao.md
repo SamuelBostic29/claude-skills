@@ -4,14 +4,14 @@
 
 Step 5 of `add-data-access`, right before you write the model/DAO. The conventions to
 carry over are listed in the skill's `Rules → What to do`; this file shows them
-**applied**, end to end, on a neutral example.
+**applied**, end to end, on a neutral example, plus the pitfalls the example exposes.
 
 ## Worked example (neutral domain)
 
-The repo already has an `<OrderDAO>` over an `<orders>` store. Task: add data access for `Widget`.
+The repo already has an `OrderDAO` over an `orders` store. Task: add data access for a `Widget`. (This example uses a partitioned, cached store, so it exercises the full checklist; a plain SQL/ORM repo has fewer conventions — mirror only what your reference actually uses.)
 
 ```text
-REFERENCE (existing) — <order_dao>:
+REFERENCE (existing) — order_dao:
   class OrderDAO:
     __init__(container, cache, logger, ttl, limits, allowlists, constants...)
     get_by_id(order_id)             # cache-through point read on the partition key
@@ -20,7 +20,7 @@ REFERENCE (existing) — <order_dao>:
     list(tenant, filters, limit, order_by, group_by)
         # allowlist-checked fields -> parameterized query -> optional list-cache + index
 
-NEW — <widget_dao>, mirroring it 1:1:
+NEW — widget_dao, mirroring it 1:1:
   class WidgetDAO:
     __init__(...same shape...)
     get_by_id(widget_id)            # same cache-through read
@@ -30,10 +30,8 @@ NEW — <widget_dao>, mirroring it 1:1:
         # Widget's own ALLOWED_FILTER / ORDERABLE / GROUPABLE sets, same query/cache builder
 ```
 
-## Gotchas
+## Gotchas (what the example exposes)
 
-- **Match the reference's id derivation exactly** — auto-prefix + uuid, compound from source-key fields, or caller-supplied. Getting it wrong silently creates duplicate or unfindable documents.
-- If `Widget` already has a DAO, add the method to it — do not create a second class.
-- A new filterable/sortable field must be added to the **allowlist**, or `list` will ignore or reject it.
-- Caller-supplied values always go through bound parameters — even a one-off lookup.
-- The DAO stays persistence-only: no business rules, no request/response types.
+- **Id derivation is silent when wrong.** Match the reference exactly — auto-prefix + uuid, compound from source-key fields, or caller-supplied. A mismatch produces duplicate or unfindable documents with no error.
+- **A new filter/sort field stays inert until it's in the allowlist.** `list` ignores fields it doesn't recognize, so the query "succeeds" but never actually filters or orders by it.
+- **Changing a partition-key value strands the old document.** A plain upsert with a new partition value leaves the prior copy under its old partition — check how the reference re-partitions (delete-then-write) before touching a key field.

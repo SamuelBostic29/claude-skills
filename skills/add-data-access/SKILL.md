@@ -1,6 +1,6 @@
 ---
 name: add-data-access
-version: 1.0.0
+version: 0.1.0
 description: |
   Use when adding the data-access layer for a resource — a typed model plus a
   repository/DAO class, or one new read/write/query method on a DAO that already
@@ -47,11 +47,11 @@ The failure mode this skill exists to prevent is the **textbook DAO**: generatin
 
 4. **Write the model** (new-DAO case only). Define the typed model exactly as the repo defines its models — same base type, field-typing style, timestamp/serialization handling.
 
-5. **Write the DAO / method.** Mirror the reference's structure: constructor/dependency shape, primary-key & partition handling, optimistic-concurrency mechanism, cache keys + invalidation, parameterized queries, field allowlists, the constants block, and logging. Keep it persistence-only — no business rules, no request/response types. For a concrete before→after and the full conventions-to-match checklist, read `references/mirroring-a-dao.md`.
+5. **Write the DAO / method.** Mirror the reference's structure — only the pieces it actually has: constructor/dependency shape, primary-key & (any) partition handling, optimistic-concurrency mechanism, any cache keys + invalidation, parameterized queries, field allowlists, the constants block, and logging. Keep it persistence-only — no business rules, no request/response types. For a concrete before→after and the full conventions-to-match checklist, read `references/mirroring-a-dao.md`.
 
-6. **Wire it in only as the repo already wires DAOs** (the same registration/factory the sibling DAO uses). Do not introduce a new wiring mechanism.
+6. **Wire it in** (new-DAO case only) — as the repo already wires DAOs (the same registration/factory the sibling DAO uses). Do not introduce a new wiring mechanism. Adding a method to an existing DAO needs no new wiring.
 
-7. **Stop.** Done = the model and DAO (or the new method) exist, mirror the reference, and import/compile cleanly. Do not write the service, the route, or the tests — those are separate skills. Report the files and the reference DAO you mirrored.
+7. **Stop.** Done = the model and DAO (or the new method) exist, mirror the reference, and are internally consistent (names/imports resolve by inspection — this skill runs no build). Do not write the service, the route, or the tests — those are separate skills. Report the files and the reference DAO you mirrored.
 
 ## Output format
 
@@ -69,14 +69,14 @@ Other layers: add-service (logic) · add-controller (HTTP) · add-tests
 ### What to do
 
 - **Mirror, don't invent.** The nearest existing DAO is the spec. Match its idioms even if you'd personally write it differently.
-- **Match every persistence convention the reference encodes:** primary-key / `id` derivation, partition-key handling, optimistic concurrency (e.g. ETag / `If-Match`), cache namespace + key shape + invalidation, query **parameterization**, filter/order/group **allowlists**, the constants / no-magic-numbers block, and the logging prefix/format.
+- **Match every persistence convention the reference encodes — and only those it actually uses.** Depending on the store, that may include: primary-key / `id` derivation, partition-key handling, optimistic concurrency (e.g. ETag / `If-Match`, or a row-version column), a cache layer (namespace + key shape + invalidation), query **parameterization**, filter/order/group **allowlists**, the constants / no-magic-numbers block, and the logging prefix/format. A plain SQL/ORM repo with no partitioning or cache simply has fewer of these to mirror — don't add a mechanism the reference doesn't have.
 - **One resource, one layer.** A model + its DAO, or a single method. If the resource already has a DAO, add to it rather than creating a second class.
 - **Keep the layer boundary clean.** Persistence only — reads/writes/queries and their caching. No validation, business rules, or HTTP types.
 
 ### What NOT to do
 
 - **NEVER interpolate caller-supplied values into a query string.** Use the repo's parameterization, always — even when a quick f-string "would work."
-- **NEVER invent a new caching, concurrency, or wiring scheme** when the repo already has one. Reuse it.
+- **NEVER invent a new caching, concurrency, or wiring scheme.** Reuse the repo's — and if the reference has none (no cache layer, no partitioning), add none.
 - **Don't transliterate another language's ORM/repository idioms.** Produce code idiomatic to this repo, matched to its real DAO — not a port of muscle memory.
 - **Don't bleed upward.** No business logic, no route/HTTP concerns, no test code — those belong to add-service / add-controller / add-tests.
 

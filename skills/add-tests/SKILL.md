@@ -1,6 +1,6 @@
 ---
 name: add-tests
-version: 1.0.0
+version: 0.1.0
 description: |
   Use when adding tests for code in this repo — unit tests for a model, DAO,
   service, or handler, mirroring the repo's existing test style (framework,
@@ -67,7 +67,7 @@ Run with: <the repo's test command>   (not run automatically)
 ### What to do
 
 - **Mirror, don't invent.** Match the nearest test's framework, layout, naming, and mocking style.
-- **Mock the layer directly below the unit.** A service test fakes its repos; a handler test fakes its service; a model / pure-function test mocks nothing and asserts its serialization/validation directly. Reuse the repo's existing fakes/fixtures.
+- **Mock the layer directly below the unit.** A service test fakes its repos; a handler test fakes the layer directly below it — its service, or its DAO if the handler calls one directly; a model / pure-function test mocks nothing and asserts its serialization/validation directly. Reuse the repo's existing fakes/fixtures.
 - **Cover behavior that matters.** Happy path, the meaningful branches, and ≥1 failure/error path.
 - **Assert observable behavior and contracts** — return values, calls made, errors raised — not private internals.
 
