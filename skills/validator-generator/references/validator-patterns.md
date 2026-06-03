@@ -18,7 +18,7 @@ Step 4 of `SKILL.md` sends you here once the variant is known. Read the matching
 
 Uniqueness, FK-existence, and dependency checks must hit a data source. Inject an **adopter-owned abstraction** — a small interface the adopter implements over their repository/`DbContext`/query — **never a named third-party type**. That is what keeps FluentValidation the only named third-party dependency in the validator. The interfaces below are neutral examples the adopter owns; swap in the repo's real ones:
 
-- `IProductUniquenessChecker` — `Task<bool> IsNameAvailableAsync(string name, CancellationToken ct)` plus an overload `(string name, int excludingId, CancellationToken ct)` for update.
+- `IProductUniquenessChecker` — the cross-record questions the create/update rules ask: `Task<bool> IsNameAvailableAsync(string name, CancellationToken ct)`, an `(string name, int excludingId, CancellationToken ct)` overload for update, and `Task<bool> CategoryExistsAsync(int categoryId, CancellationToken ct)` for the FK-existence rule.
 - `IProductDependencyChecker` — `Task<bool> IsReferencedByOrdersAsync(int id, CancellationToken ct)`.
 
 The genuine fill-ins — angle-bracketed because the adopter must supply them — are `<Namespace>` (the validators' namespace) and the base type: `AbstractValidator<T>` (FluentValidation's own, safe to name) or the repo's `<BaseValidator<T>>` if it has one.
