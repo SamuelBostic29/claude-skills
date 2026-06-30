@@ -12,3 +12,6 @@ desktop.ini
 # Local scratch / notes (never publish)
 /notes/
 *.local.md
+
+# pr-stats per-user output location (keep your path out of the repo; see output-dir.txt.example)
+skills/pr-stats/output-dir.txt

@@ -1,10 +1,11 @@
 ---
 name: pr-stats
-version: 1.0.0
+version: 2.1.0
 description: |
   Summarize a GitHub user's pull-request activity over a time window into one
   markdown report — per-PR metadata, lines/files/commits, human-reviewer-comment
-  counts (bots filtered), and a short summary of each linked issue. Use when
+  counts (bots filtered), and a short summary of the Jira ticket each PR delivers
+  (key taken from the branch / title, fetched via the jira skill). Use when
   asked for "PR stats", a "PR report", "summarize my GitHub work", "what did I
   ship in the last X", or given a PR number/URL for a single-PR writeup. Defaults
   the author to the authed gh account and the window to the last 14 days.
@@ -12,11 +13,12 @@ allowed-tools:
   - Bash
   - Write
   - AskUserQuestion
+  - Skill
 ---
 
 # PR Stats: summarize a user's GitHub PR activity into one report
 
-You are producing a single markdown report of the pull requests one GitHub user authored in a time window — aggregate totals plus a per-PR breakdown, including a short "what was asked" summary of each linked issue. You gather read-only from GitHub via `gh` and write exactly one local file. You never post, comment, push, or open anything.
+You are producing a single markdown report of the pull requests one GitHub user authored in a time window — aggregate totals plus a per-PR breakdown, including a short "what was asked" summary of the Jira ticket each PR delivers. Tickets now live in **Jira** (GitHub is only for code and PRs — there are no GitHub issues to report on): each PR carries its Jira key structurally — the branch is `<base>_BUILDER-XXXXX` and the title leads with `BUILDER-XXXXX` — and the **jira skill owns the fetch**. You gather PR data read-only from GitHub via `gh`, hand each Jira key to the jira skill, and write exactly one local file. You never post, comment, push, or open anything.
 
 Two failure modes to guard against: **(1) silently running as the wrong account** when several are authed — resolve the user up front (Step 1) and switch at most once; and **(2) baking in anything personal** — user, scope, output path, and automation accounts are all resolved at runtime or configurable, never hardcoded.
 
@@ -51,14 +53,20 @@ The resolved login is the report's `--author` and the account every later `gh` c
 
 - **Scope (optional):** if the user named an owner/org, capture it as `<OWNER>`; otherwise scope is *all repos* the search returns for the user.
 - **Window:** convert the user's date phrasing to absolute `YYYY-MM-DD` for `--since`/`--until`. Default: the last 14 days ending today (use the date from the system context as today). If only a start is given, end = today.
-- **Output dir:** default `~/pr-stats/`; use an explicit directory if the user gave one.
+- **Output dir:** an explicit directory named in the request always wins. Otherwise read the configured default from `output-dir.txt` in this skill's base directory (the path printed at invocation) — its first non-comment, non-empty line. If that file is missing or empty, fall back to `~/pr-stats/`. (`output-dir.txt` is git-ignored — see `output-dir.txt.example` — so each user's path stays local and the skill ships with the `~/pr-stats/` default.)
 - **Extra automation accounts (optional):** any non-bot automation logins the user wants excluded (e.g. an org's security scanner) — fold these into the exclusion list in Step 6.
 - **Mode:** a PR number / `owner/repo#N` / PR URL → **single-PR mode** (skip the Step 4 search; one-PR report, no aggregates). Otherwise **bulk mode**.
 
-### Step 3 — Ensure the output directory exists
+### Step 3 — Resolve the output directory and ensure it exists
 
-```
-mkdir -p <OUTPUT_DIR>          # default ~/pr-stats
+Skip the config read if the request named an explicit directory. Otherwise resolve the configured
+default, falling back to `~/pr-stats/`. Quote the path on every use — the configured default contains a space.
+
+```bash
+CFG="<skill-base>/output-dir.txt"   # <skill-base> = this skill's base directory, printed at invocation
+OUTPUT_DIR="${OUTPUT_DIR:-$(grep -vE '^[[:space:]]*(#|$)' "$CFG" 2>/dev/null | head -1)}"
+[ -z "$OUTPUT_DIR" ] && OUTPUT_DIR="$HOME/pr-stats"
+mkdir -p "$OUTPUT_DIR"
 ```
 
 ### Step 4 — Find the PRs (bulk mode)
@@ -80,7 +88,7 @@ For each PR `<owner>/<repo>#<num>`, issue these **in parallel within one tool-us
 
 ```
 a. gh pr view <num> --repo <owner>/<repo> \
-     --json number,title,state,createdAt,closedAt,mergedAt,url,body,headRefName,baseRefName,additions,deletions,changedFiles,commits,isDraft,author,labels
+     --json number,title,state,createdAt,closedAt,mergedAt,url,headRefName,baseRefName,additions,deletions,changedFiles,commits,isDraft,author,labels
 b. gh api 'repos/<owner>/<repo>/pulls/<num>/comments' --paginate \
      --jq '[.[] | {login:.user.login, user_type:.user.type, body, path, line, created_at}]'
 c. gh api 'repos/<owner>/<repo>/issues/<num>/comments' --paginate \
@@ -105,26 +113,21 @@ Combine three sources per PR: inline review comments (5b), conversation comments
 
 Remaining entries are **human reviewer comments**. Group by login and count.
 
-### Step 7 — Parse linked issues from each PR body
+### Step 7 — Derive the Jira key and fetch the ticket via the jira skill
 
-Run (case-insensitive, multiline) over `body`:
+Tickets are in **Jira**, not GitHub — there are no GitHub issues to parse. The key is structural, so just read it off the PR; do **not** scan the body for `closes/fixes/resolves`:
 
-```
-(?i)(?:closes|fixes|resolves):?\s+#(\d+)
-```
+1. **Branch first:** the head branch is `<base>_<KEY>` (e.g. `master_BUILDER-17385` → `BUILDER-17385`). Take the segment after the last `_` if it matches a Jira key (`[A-Z][A-Z0-9]+-\d+`).
+2. **Title fallback:** the title leads with the key (e.g. `BUILDER-17385 — …`) — take the leading `[A-Z][A-Z0-9]+-\d+` token.
+3. **Neither matches** → the PR has no linked ticket; omit its ticket block (never fabricate one).
 
-Process **every** match (a PR can close several). The capture is the issue number; the issue is always in the PR's own repo — this skill doesn't handle cross-repo `owner/repo#N` references. For each:
+A PR maps to exactly one ticket. **Dedupe keys across PRs** (stacked PRs can share one) so each ticket is fetched once, then attach its summary to every PR that carries it.
 
-```
-gh issue view <num> --repo <owner>/<repo> \
-  --json number,title,body,createdAt,closedAt,url,labels
-```
+The **jira skill owns the fetch** — token resolution, the Data Center REST call, and HTTP-status handling all live there; this skill never touches the Jira token or runs curl against Jira. For each distinct key, invoke the **jira** skill (Skill tool) to read `BUILDER-XXXXX` and work from the fields it returns (summary, description, issue type, status, acceptance criteria, labels). If the jira skill reports the token isn't set up (or rejects it), write `_Linked ticket <KEY> could not be fetched — run /jira to set up the token_` for that PR and continue — relay its instruction, don't retry, and never fail the whole report. On any other fetch failure, write `_Linked ticket <KEY> could not be fetched_` and continue.
 
-On a failed lookup, write `_Linked issue #N could not be fetched_` and continue — never fail the whole report.
+### Step 8 — Summarize each linked ticket
 
-### Step 8 — Summarize each linked issue
-
-A single paragraph (4–6 sentences) per fetched issue, focused on: the problem it describes, **what was specifically asked of the implementer** (the requirement / acceptance criteria), and any constraints or dependencies that shaped the work. Don't quote the body verbatim, don't pad, don't restate metadata. If the issue body is under 200 characters, include it verbatim instead.
+A single paragraph (4–6 sentences) per fetched ticket, focused on: the problem it describes, **what was specifically asked of the implementer** (the requirement / acceptance criteria), and any constraints or dependencies that shaped the work. Don't quote the description verbatim, don't pad, don't restate metadata. If the ticket description is under 200 characters, include it verbatim instead.
 
 ### Step 9 — Compute aggregate stats (bulk mode only)
 
@@ -132,7 +135,7 @@ First **classify each PR into exactly one state bucket** so drafts aren't double
 
 ### Step 10 — Generate and write the report, then stop
 
-Build the full markdown in memory (template below), then write it **once** to `<OUTPUT_DIR>/report-<YYYYMMDD>-<HHmmss>.md` (local date/time, so repeated runs don't collide). If Step 1 switched accounts, note that in the header. Print the absolute path. **Stop** — the file path is the entire deliverable.
+Build the full markdown in memory (template below), then write it **once** to `<OUTPUT_DIR>/report-<YYYYMMDD>-<HHmmss>.md` — the `<OUTPUT_DIR>` resolved in Step 3 — using local date/time so repeated runs don't collide. If Step 1 switched accounts, note that in the header. Print the absolute path. **Stop** — the file path is the entire deliverable. (Any downstream filing of the report is a separate manual step the skill does not perform.)
 
 ## Report template
 
@@ -184,12 +187,12 @@ Build the full markdown in memory (template below), then write it **once** to `<
 
 (If 0, write `_None_`.)
 
-#### Linked issue: #<num> — <issue title>
-**URL**: <issue url>
+#### Linked ticket: <KEY> — <ticket summary>
+**URL**: https://portal.myparadigm.com/browse/<KEY>
 
-<paragraph summary of what the issue asked the implementer to deliver>
+<paragraph summary of what the ticket asked the implementer to deliver>
 
-(Repeat per linked issue. Omit the block entirely if the PR links none — never fabricate one.)
+(Omit the block entirely if the PR has no derivable Jira key — never fabricate one.)
 
 ---
 
@@ -209,10 +212,11 @@ In single-PR mode, emit one `### #<num>` section and omit the `## Summary` aggre
 
 ### What NOT to do
 
-- **NEVER hardcode a username, org, output path, or automation account** — resolve the user (Step 1), default the window/output, and take scope + extra-bot accounts as input.
+- **NEVER hardcode a username, org, output path, or automation account into the procedure** — resolve the user (Step 1); the output dir comes from `output-dir.txt` (with a `~/pr-stats/` fallback) or an explicit request; default the window; take scope + extra-bot accounts as input. The personal path lives only in `output-dir.txt`, never in these steps.
 - **NEVER post, comment, push, or open anything.** Read-only; one local file is the only write.
 - **NEVER append to or merge with a prior report** — every run is a fresh, uniquely-timestamped file.
-- **NEVER fabricate a linked issue** — if the body has no `closes/fixes/resolves`, omit the issue block.
+- **NEVER fabricate a linked ticket** — if neither the branch nor the title yields a Jira key, omit the ticket block.
+- **NEVER touch the Jira token or call Jira directly** — the jira skill owns every Jira fetch; this skill only hands it a key.
 
 ### Format discipline
 

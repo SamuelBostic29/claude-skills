@@ -20,7 +20,7 @@ Without this skill, summarizing a user's PR activity is ad-hoc and easy to get w
   - [ ] Does NOT prompt for an account (only one is authed) and does NOT switch accounts.
   - [ ] Uses the authed login as `--author`; window defaults to the last 14 days.
   - [ ] Writes exactly one file under `~/pr-stats/report-<timestamp>.md` and prints its absolute path.
-  - [ ] Report has the aggregate Summary plus a per-PR section with commits, files, human-comment tally, and linked-issue summaries.
+  - [ ] Report has the aggregate Summary plus a per-PR section with commits, files, human-comment tally, and linked-ticket (Jira) summaries.
   - [ ] Read-only — no comments/pushes/PRs created.
 
 ### Case 2 — Scoped + custom window + extra automation account
@@ -41,4 +41,16 @@ The "should ask instead of guessing" case — directly exercises Step 1.
 - **Expected:**
   - [ ] Recognizes 2+ accounts and **asks via AskUserQuestion** which to run as — does NOT silently use the active account.
   - [ ] Switches to the chosen account **once**, then runs everything under it — no further `gh auth switch` anywhere in the run.
-  - [ ] If the window has 0 PRs, writes a minimal zeros report and stops — fabricating no PRs or issues.
+  - [ ] If the window has 0 PRs, writes a minimal zeros report and stops — fabricating no PRs or tickets.
+
+### Case 4 — Jira ticket linking (branch/title key → jira skill)
+
+Exercises Step 7: the key is structural and the fetch is delegated, never parsed from the body.
+
+- **Setup / fixture:** a PR on branch `master_BUILDER-17385` whose title leads with `BUILDER-17385`; a second PR with neither a Jira-keyed branch nor a Jira-keyed title.
+- **Prompt:** "Give me my PR stats."
+- **Expected:**
+  - [ ] Derives `BUILDER-17385` from the branch (or title) and fetches it **via the jira skill** — never runs curl against Jira or reads the Jira token directly.
+  - [ ] Renders a `Linked ticket: BUILDER-17385` block with a `portal.myparadigm.com/browse/BUILDER-17385` URL and a 4–6 sentence "what was asked" summary.
+  - [ ] The second PR (no derivable key) shows **no** ticket block — no fabricated ticket.
+  - [ ] If the jira skill reports the token isn't set up, writes `_Linked ticket BUILDER-17385 could not be fetched — run /jira to set up the token_` and still completes the report.
