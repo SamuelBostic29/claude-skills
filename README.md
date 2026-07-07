@@ -1,22 +1,44 @@
 # claude-skills
 
-A growing collection of portable, high-quality [Claude Code](https://docs.claude.com/en/docs/claude-code) skills.
+A curated collection of portable, high-quality [Claude Code](https://docs.claude.com/en/docs/claude-code) skills — the sharable subset distilled from a larger personal toolkit.
 
-Every skill here is built to the same bar: **self-contained, opinionated, and convergent.** They do one thing well, give the model crisp decision rules instead of vague guidance, and carry no project-, company-, or machine-specific assumptions — so they drop into any repo and just work.
+Every skill here is built to the same bar: **self-contained, opinionated, and convergent.** They do one thing well, give the model crisp decision rules instead of vague guidance, and carry no company- or machine-specific assumptions — so they drop into any repo and just work. Skills that target a specific stack (currently .NET) are labeled as such.
 
 ## Skills
+
+### Planning
 
 | Skill | What it does |
 |---|---|
 | [`plan-save`](skills/plan-save) | Restructure a plan into a persistent, phase-tracked markdown file you can execute across sessions. |
 | [`plan-next`](skills/plan-next) | Execute the next incomplete phase of a saved plan — implement it, update the file, then stop. |
 | [`plan-review`](skills/plan-review) | A convergence-oriented review of a saved plan: verdict first, blockers capped, "I don't understand" routed to questions instead of nitpicks. |
+
+### Code understanding & review
+
+| Skill | What it does |
+|---|---|
 | [`call-trace`](skills/call-trace) | Trace the full call chain in both directions — callers and callees — around a target, reading whole method bodies to build deep context before changing shared or foundational code. |
-| [`dbcontext-query`](skills/dbcontext-query) | Generate EF Core data-access methods (get / list / add / update / remove / paginate) for an entity as a single `DbContext` partial class — follows your repo's conventions, with namespaces and base types left as placeholders to adapt. |
-| [`dto-mapping`](skills/dto-mapping) | Generate a family of DTOs and hand-written mappers for a .NET entity — detail/list/reference reads, create/update inputs, and `ToDto()`-style mapping — recommending only the variants that fit and matching the codebase's existing conventions. |
-| [`validator-generator`](skills/validator-generator) | Generate a FluentValidation validator for a .NET DTO or command (create / update / delete / shared-save / import), with rules grounded in the DTO's real properties and uniqueness checks routed through an abstraction you own. |
+| [`review-session`](skills/review-session) | Spin up a fresh, interactive Claude Code session in a separate terminal to cold-review the whole branch — every commit over the base plus uncommitted edits — with zero context from the work that produced it. |
+
+### Git & GitHub workflow
+
+| Skill | What it does |
+|---|---|
 | [`draft-pr`](skills/draft-pr) | Finish a unit of work into a draft PR: stage **only the files changed this session** (never secret-bearing local config), commit, push, write a templated description, and open it as a draft. |
 | [`pr-stats`](skills/pr-stats) | Summarize a GitHub user's pull-request activity over a time window into one markdown report — per-PR metadata, lines/files/commits, human-review-comment counts (bots filtered), and a summary of each linked issue. |
+
+### Code generation (.NET)
+
+| Skill | What it does |
+|---|---|
+| [`dto-mapping`](skills/dto-mapping) | Generate a family of DTOs and hand-written mappers for a .NET entity — detail/list/reference reads, create/update inputs, and `ToDto()`-style mapping — recommending only the variants that fit and matching the codebase's existing conventions. |
+| [`validator-generator`](skills/validator-generator) | Generate a FluentValidation validator for a .NET DTO or command (create / update / delete / shared-save / import), with rules grounded in the DTO's real properties and uniqueness checks routed through an abstraction you own. |
+
+### Meta
+
+| Skill | What it does |
+|---|---|
 | [`skill-builder`](skills/skill-builder) | Turn a brief problem statement into a complete, repo-quality skill built from the template — scoped to one job, every layer filled, evals stubbed — then stop for review. |
 
 ## Installing a skill
@@ -49,7 +71,7 @@ What every skill in this repo aims for:
 - **One job, done well.** A single, clear purpose — no kitchen-sink skills.
 - **Decision rules, not vibes.** Hard caps, explicit "what to flag / what not to flag," verdict-first output.
 - **Convergent, not noisy.** Built to reduce churn and make-work, not generate it.
-- **Portable.** No hardcoded paths, org names, or stack assumptions.
+- **Portable.** No hardcoded paths, org names, or machine specifics — and stack-specific skills say so up front.
 
 ## License
 

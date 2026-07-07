@@ -12,3 +12,6 @@ desktop.ini
 # Local scratch / notes (never publish)
 /notes/
 *.local.md
+
+# Local planning docs (never publish)
+/docs/plans/
