@@ -32,6 +32,7 @@ Every skill here is built to the same bar: **self-contained, opinionated, and co
 | [`pr-stats`](skills/pr-stats) | Summarize a GitHub user's pull-request activity over a time window into one markdown report — per-PR metadata, lines/files/commits, human-review-comment counts (bots filtered), and a summary of each linked issue. |
 | [`pr-comments`](skills/pr-comments) | Triage a PR's review feedback — including AI-reviewer comments — into a judged task list: every item checked against repo facts and verdicted ACT / DISMISS / HUMAN with cited evidence. Never posts, never fixes. |
 | [`jira-dc`](skills/jira-dc) | Operate on a single Jira **Data Center** ticket over the DC REST API — read, comment, assign, transition, create — with a per-user PAT in a gitignored token file, stdin-fed auth that never hits argv, and every write drafted + confirmed before sending. |
+| [`postman`](skills/postman) | Read and write a Postman account over its REST API — list workspaces, dump every request in a collection (method, URL, headers, body), inspect environments — with a per-user API key in a home token file, stdin-fed auth, secret variables masked, and every write drafted + confirmed. |
 
 ### Code generation (.NET)
 
