@@ -1,5 +1,7 @@
 # claude-skills
 
+[![validate-skills](https://github.com/SamuelBostic29/claude-skills/actions/workflows/validate.yml/badge.svg)](https://github.com/SamuelBostic29/claude-skills/actions/workflows/validate.yml)
+
 A curated collection of portable, high-quality [Claude Code](https://docs.claude.com/en/docs/claude-code) skills — the sharable subset distilled from a larger personal toolkit.
 
 Every skill here is built to the same bar: **self-contained, opinionated, and convergent.** They do one thing well, give the model crisp decision rules instead of vague guidance, and carry no company- or machine-specific assumptions — so they drop into any repo and just work. Skills that target a specific stack (currently .NET) are labeled as such.
@@ -13,6 +15,7 @@ Every skill here is built to the same bar: **self-contained, opinionated, and co
 | [`plan-save`](skills/plan-save) | Restructure a plan into a persistent, phase-tracked markdown file you can execute across sessions. |
 | [`plan-next`](skills/plan-next) | Execute the next incomplete phase of a saved plan — implement it, update the file, then stop. |
 | [`plan-review`](skills/plan-review) | A convergence-oriented review of a saved plan: verdict first, blockers capped, "I don't understand" routed to questions instead of nitpicks. |
+| [`plan-from-issue`](skills/plan-from-issue) | Turn a GitHub issue (plus an optional story ticket) into a saved, phase-structured implementation plan — fetch the issue, synthesize the ask, ground it in code via `call-trace`, persist via `plan-save`. |
 
 ### Code understanding & review
 
@@ -21,12 +24,14 @@ Every skill here is built to the same bar: **self-contained, opinionated, and co
 | [`call-trace`](skills/call-trace) | Trace the full call chain in both directions — callers and callees — around a target, reading whole method bodies to build deep context before changing shared or foundational code. |
 | [`review-session`](skills/review-session) | Spin up a fresh, interactive Claude Code session in a separate terminal to cold-review the whole branch — every commit over the base plus uncommitted edits — with zero context from the work that produced it. |
 
-### Git & GitHub workflow
+### Delivery workflow
 
 | Skill | What it does |
 |---|---|
 | [`draft-pr`](skills/draft-pr) | Finish a unit of work into a draft PR: stage **only the files changed this session** (never secret-bearing local config), commit, push, write a templated description, and open it as a draft. |
 | [`pr-stats`](skills/pr-stats) | Summarize a GitHub user's pull-request activity over a time window into one markdown report — per-PR metadata, lines/files/commits, human-review-comment counts (bots filtered), and a summary of each linked issue. |
+| [`pr-comments`](skills/pr-comments) | Triage a PR's review feedback — including AI-reviewer comments — into a judged task list: every item checked against repo facts and verdicted ACT / DISMISS / HUMAN with cited evidence. Never posts, never fixes. |
+| [`jira-dc`](skills/jira-dc) | Operate on a single Jira **Data Center** ticket over the DC REST API — read, comment, assign, transition, create — with a per-user PAT in a gitignored token file, stdin-fed auth that never hits argv, and every write drafted + confirmed before sending. |
 
 ### Code generation (.NET)
 

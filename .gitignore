@@ -15,3 +15,6 @@ desktop.ini
 
 # Local planning docs (never publish)
 /docs/plans/
+
+# Per-user skill config (each user's local copy; ships as *.example)
+/skills/pr-stats/output-dir.txt

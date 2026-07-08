@@ -1,9 +1,13 @@
 ---
 name: plan-next
-version: 1.0.0
+version: 1.1.0
 description: |
-  Continue executing the next phase of a saved plan. Reads the plan file,
-  finds the next incomplete phase, implements it, updates the file, and stops.
+  Continue executing the next phase of a saved plan file. Use when asked to
+  "continue the plan", "do the next phase", "pick up where we left off" against
+  a markdown plan containing "## Implementation phases" (commonly *plan*.md) —
+  typically at the start of a fresh session. Finds the first phase not marked
+  COMPLETED, implements exactly that one, records an Implemented summary, marks
+  it COMPLETED, and stops.
 allowed-tools:
   - Read
   - Write
@@ -18,6 +22,18 @@ allowed-tools:
 # Plan Next: Execute the next phase of a saved plan
 
 You are resuming work on a structured plan saved to a local file. The plan is ALREADY WRITTEN — do NOT create a new plan or enter plan mode. Your job is to find the next incomplete phase, implement it directly, update the plan file, and stop.
+
+## When to use this skill
+
+- A saved plan file exists and you're resuming work on it — typically the first action of a fresh session.
+- "Continue the plan" / "do the next phase" / "pick up where we left off".
+
+## When NOT to use this skill
+
+- **No saved plan exists** — use `plan-save` to create one first; this skill executes, it doesn't author.
+- **The user wants the plan changed** — that's an edit to the plan file made with the user, not a phase execution. Never enter plan mode.
+- **The user wants a critique** — use `plan-review`.
+- **"Run the whole plan"** — the contract is one phase per invocation; if asked for more, say so and still do only the next phase (the user can re-invoke).
 
 ## Steps
 

@@ -1,10 +1,13 @@
 ---
 name: plan-review
-version: 1.0.0
+version: 1.1.0
 description: |
   Review a saved plan with convergence-oriented discipline — verdict first,
   blockers capped, "I don't understand" converted to questions instead of
-  findings. Designed to avoid the fresh-eyes nit-list pattern where every
+  findings. Use when asked to "review the plan", "sanity-check the plan", or
+  for a fresh-eyes second opinion on a saved plan file before executing it;
+  reads prior review entries so repeated rounds converge instead of
+  re-litigating. Designed to avoid the fresh-eyes nit-list pattern where every
   review produces 6-8 items regardless of plan maturity.
 allowed-tools:
   - Read
@@ -20,6 +23,17 @@ allowed-tools:
 You are reviewing a plan that was written in a prior session. You do NOT have the session context the author had while writing it. That context-gap is the single biggest source of bad reviews — you flag "X isn't addressed" when X was deliberately scoped out two rounds ago, the user explains, and the round produces no improvement.
 
 Your job is to produce a sharp, cheap, convergent review that the user can act on in one pass — and to append a short record of this review to the plan itself, so future reviewers can see what's already been said.
+
+## When to use this skill
+
+- Gating a saved plan before `plan-next` starts executing it — typically once, in a fresh session.
+- "Review the plan" / "sanity-check this plan" / a second opinion after major plan revisions.
+
+## When NOT to use this skill
+
+- **Reviewing code, diffs, or PRs** — this reviews plan files; use a code-review flow for code.
+- **An unsaved, in-chat draft** — persist it first (`plan-save`); the review appends its record to the file.
+- **Expecting fixes** — this skill reports a verdict; editing the plan stays with the author.
 
 ## Steps
 
