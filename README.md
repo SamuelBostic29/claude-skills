@@ -28,6 +28,12 @@ Every skill here is built to the same bar: **self-contained, opinionated, and co
 | [`draft-pr`](skills/draft-pr) | Finish a unit of work into a draft PR: stage **only the files changed this session** (never secret-bearing local config), commit, push, write a templated description, and open it as a draft. |
 | [`pr-stats`](skills/pr-stats) | Summarize a GitHub user's pull-request activity over a time window into one markdown report — per-PR metadata, lines/files/commits, human-review-comment counts (bots filtered), and a summary of each linked issue. |
 
+### Meetings & notes (Microsoft 365 MCP)
+
+| Skill | What it does |
+|---|---|
+| [`meeting-summary`](skills/meeting-summary) | Turn a recorded Teams meeting — from a SharePoint recording link, Teams link, or a name/date — into structured markdown notes: a transcript-grounded meeting note filed by series and date, plus append-only per-project docs. Requires the Microsoft 365 MCP connector. |
+
 ### Code generation (.NET)
 
 | Skill | What it does |
