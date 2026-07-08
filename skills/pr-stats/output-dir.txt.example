@@ -1,0 +1,11 @@
+# pr-stats output location — OPTIONAL per-user config (read by SKILL.md Step 3).
+#
+# Copy this file to `output-dir.txt` (which is git-ignored) and set ONE line to the
+# directory where reports should be written. The first non-comment, non-empty line wins.
+# Use a full path — `~` and environment variables are NOT expanded here.
+#
+# With no `output-dir.txt` present, reports fall back to `~/pr-stats/`.
+# A directory named explicitly in the request always overrides both.
+#
+# Example (uncomment and edit in your copy):
+# C:/Users/you/pr-reports

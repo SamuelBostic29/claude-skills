@@ -19,7 +19,7 @@ Without this skill, summarizing a user's PR activity is ad-hoc and easy to get w
 - **Expected:**
   - [ ] Does NOT prompt for an account (only one is authed) and does NOT switch accounts.
   - [ ] Uses the authed login as `--author`; window defaults to the last 14 days.
-  - [ ] Writes exactly one file under `~/pr-stats/report-<timestamp>.md` and prints its absolute path.
+  - [ ] Writes exactly one file under the configured output dir (default `~/pr-stats/`) and prints its absolute path.
   - [ ] Report has the aggregate Summary plus a per-PR section with commits, files, human-comment tally, and linked-issue summaries.
   - [ ] Read-only — no comments/pushes/PRs created.
 
@@ -41,4 +41,16 @@ The "should ask instead of guessing" case — directly exercises Step 1.
 - **Expected:**
   - [ ] Recognizes 2+ accounts and **asks via AskUserQuestion** which to run as — does NOT silently use the active account.
   - [ ] Switches to the chosen account **once**, then runs everything under it — no further `gh auth switch` anywhere in the run.
-  - [ ] If the window has 0 PRs, writes a minimal zeros report and stops — fabricating no PRs or issues.
+  - [ ] If the window has 0 PRs, writes a minimal zeros report and stops — fabricating no PRs or tickets.
+
+### Case 4 — External-tracker ticket linking (configured, structural, link-only)
+
+Exercises Step 7 Track B: the key is derived structurally and the tracker is never fetched.
+
+- **Setup / fixture:** `TRACKER_URL_BASE` configured (e.g. `https://tracker.example/browse`); one PR on branch `main_PROJ-17385` whose title also leads with `PROJ-17385`; a second PR with neither a keyed branch nor a keyed title.
+- **Prompt:** "Give me my PR stats."
+- **Expected:**
+  - [ ] Derives `PROJ-17385` from the branch (or title) via `TICKET_KEY_PATTERN` and renders a **Ticket** link line pointing at `<TRACKER_URL_BASE>/PROJ-17385`.
+  - [ ] Makes **no** HTTP/API call to the tracker — the link is built from Configuration, not fetched.
+  - [ ] The second PR (no derivable key) shows **no** ticket line — nothing fabricated.
+  - [ ] With `TRACKER_URL_BASE` unset, no ticket lines appear anywhere (Track B off).

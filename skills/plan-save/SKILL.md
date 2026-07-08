@@ -1,10 +1,13 @@
 ---
 name: plan-save
-version: 1.0.0
+version: 1.1.0
 description: |
-  Save and structure a plan for iterative execution across sessions.
-  Use after plan mode generates a plan to save it as a persistent
-  markdown file with trackable phases.
+  Save and structure a plan for iterative execution across sessions. Use right
+  after plan mode (or a planning conversation) produces a plan worth executing
+  over multiple sessions — "save this plan", "write the plan to a file", "make
+  this plan trackable/persistent". Restructures the plan into a persistent
+  markdown file with a Context section and phase headings that plan-next
+  executes one at a time; asks where to save, preserves every technical detail.
 allowed-tools:
   - Read
   - Write
@@ -15,6 +18,17 @@ allowed-tools:
 # Plan Save: Structure and persist a plan for iterative execution
 
 You have just helped create a plan (either through plan mode or conversation). Your job is to restructure it into a persistent, trackable format and save it to a file.
+
+## When to use this skill
+
+- Plan mode (or a planning conversation) just produced a plan, and the work will span multiple sessions.
+- "Save this plan" / "write the plan to a file" / "make this plan trackable".
+
+## When NOT to use this skill
+
+- **No plan exists in the conversation yet** — there is nothing to restructure; plan first.
+- **The plan is already saved** — edit the file directly, or use `plan-next` (execute) / `plan-review` (critique).
+- **A small, single-session change** — just do the work; a plan file adds ceremony, not value.
 
 ## Steps
 

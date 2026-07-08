@@ -1,13 +1,14 @@
 ---
 name: pr-stats
-version: 1.0.0
+version: 2.2.0
 description: |
   Summarize a GitHub user's pull-request activity over a time window into one
   markdown report — per-PR metadata, lines/files/commits, human-reviewer-comment
-  counts (bots filtered), and a short summary of each linked issue. Use when
-  asked for "PR stats", a "PR report", "summarize my GitHub work", "what did I
-  ship in the last X", or given a PR number/URL for a single-PR writeup. Defaults
-  the author to the authed gh account and the window to the last 14 days.
+  counts (bots filtered), a summary of each linked GitHub issue, and (when
+  configured) a link to each PR's external-tracker ticket. Use when asked for
+  "PR stats", a "PR report", "summarize my GitHub work", "what did I ship in
+  the last X", or given a PR number/URL for a single-PR writeup. Defaults the
+  author to the authed gh account and the window to the last 14 days.
 allowed-tools:
   - Bash
   - Write
@@ -16,9 +17,17 @@ allowed-tools:
 
 # PR Stats: summarize a user's GitHub PR activity into one report
 
-You are producing a single markdown report of the pull requests one GitHub user authored in a time window — aggregate totals plus a per-PR breakdown, including a short "what was asked" summary of each linked issue. You gather read-only from GitHub via `gh` and write exactly one local file. You never post, comment, push, or open anything.
+You are producing a single markdown report of the pull requests one GitHub user authored in a time window — aggregate totals plus a per-PR breakdown, including a short "what was asked" summary of each linked GitHub issue and, when the adopter configures a tracker, a link to each PR's external ticket. You gather read-only from GitHub via `gh` and write exactly one local file. You never post, comment, push, or open anything.
 
-Two failure modes to guard against: **(1) silently running as the wrong account** when several are authed — resolve the user up front (Step 1) and switch at most once; and **(2) baking in anything personal** — user, scope, output path, and automation accounts are all resolved at runtime or configurable, never hardcoded.
+Two failure modes to guard against: **(1) silently running as the wrong account** when several are authed — resolve the user up front (Step 1) and switch at most once; and **(2) baking in anything personal** — user, scope, output path, tracker, and automation accounts are all resolved at runtime or configurable, never hardcoded.
+
+## Configuration (optional — set per adopter)
+
+| Key | Default | Used for |
+| --- | --- | --- |
+| Output dir | first non-comment line of `output-dir.txt` in this skill's folder, else `~/pr-stats/` | Where reports are written (`output-dir.txt` is git-ignored; ships as `output-dir.txt.example`) |
+| `TICKET_KEY_PATTERN` | `[A-Z][A-Z0-9]+-\d+` | Recognizing an external-tracker ticket key in a PR's head branch or title |
+| `TRACKER_URL_BASE` | unset | Rendering a per-PR ticket link (`<TRACKER_URL_BASE>/<KEY>`). Unset = external-tracker linking off entirely |
 
 ## When to use this skill
 
@@ -51,14 +60,19 @@ The resolved login is the report's `--author` and the account every later `gh` c
 
 - **Scope (optional):** if the user named an owner/org, capture it as `<OWNER>`; otherwise scope is *all repos* the search returns for the user.
 - **Window:** convert the user's date phrasing to absolute `YYYY-MM-DD` for `--since`/`--until`. Default: the last 14 days ending today (use the date from the system context as today). If only a start is given, end = today.
-- **Output dir:** default `~/pr-stats/`; use an explicit directory if the user gave one.
+- **Output dir:** an explicit directory named in the request always wins; otherwise resolved in Step 3 per Configuration.
 - **Extra automation accounts (optional):** any non-bot automation logins the user wants excluded (e.g. an org's security scanner) — fold these into the exclusion list in Step 6.
 - **Mode:** a PR number / `owner/repo#N` / PR URL → **single-PR mode** (skip the Step 4 search; one-PR report, no aggregates). Otherwise **bulk mode**.
 
-### Step 3 — Ensure the output directory exists
+### Step 3 — Resolve the output directory and ensure it exists
 
-```
-mkdir -p <OUTPUT_DIR>          # default ~/pr-stats
+Skip the config read if the request named an explicit directory. Otherwise read the configured default from `output-dir.txt` (first non-comment, non-empty line), falling back to `~/pr-stats/`. Quote the path on every use — a configured default may contain spaces.
+
+```bash
+CFG="<skill-base>/output-dir.txt"   # <skill-base> = this skill's base directory, printed at invocation
+OUTPUT_DIR="${OUTPUT_DIR:-$(grep -vE '^[[:space:]]*(#|$)' "$CFG" 2>/dev/null | head -1)}"
+[ -z "$OUTPUT_DIR" ] && OUTPUT_DIR="$HOME/pr-stats"
+mkdir -p "$OUTPUT_DIR"
 ```
 
 ### Step 4 — Find the PRs (bulk mode)
@@ -105,9 +119,9 @@ Combine three sources per PR: inline review comments (5b), conversation comments
 
 Remaining entries are **human reviewer comments**. Group by login and count.
 
-### Step 7 — Parse linked issues from each PR body
+### Step 7 — Link work items: GitHub issues always, an external tracker only when configured
 
-Run (case-insensitive, multiline) over `body`:
+**Track A — linked GitHub issues (always on).** Run (case-insensitive, multiline) over `body`:
 
 ```
 (?i)(?:closes|fixes|resolves):?\s+#(\d+)
@@ -122,7 +136,15 @@ gh issue view <num> --repo <owner>/<repo> \
 
 On a failed lookup, write `_Linked issue #N could not be fetched_` and continue — never fail the whole report.
 
-### Step 8 — Summarize each linked issue
+**Track B — external-tracker ticket link (only when `TRACKER_URL_BASE` is configured).** Many teams keep tickets outside GitHub; the key is usually structural on the PR:
+
+1. **Branch first:** if the head branch's segment after the last `_` (or `/` or `-` prefix segment) matches `TICKET_KEY_PATTERN`, take it (e.g. `main_PROJ-17385` → `PROJ-17385`).
+2. **Title fallback:** take a leading `TICKET_KEY_PATTERN` token from the title.
+3. **Neither matches** → the PR has no external ticket; omit its ticket line (never fabricate one).
+
+Dedupe keys across PRs (stacked PRs can share one) and render each as a **link line only** — `<TRACKER_URL_BASE>/<KEY>`. **Never fetch the external tracker** — fetching would couple this skill to a specific tracker's API and credentials; the link is the deliverable. With `TRACKER_URL_BASE` unset, skip Track B entirely.
+
+### Step 8 — Summarize each linked GitHub issue
 
 A single paragraph (4–6 sentences) per fetched issue, focused on: the problem it describes, **what was specifically asked of the implementer** (the requirement / acceptance criteria), and any constraints or dependencies that shaped the work. Don't quote the body verbatim, don't pad, don't restate metadata. If the issue body is under 200 characters, include it verbatim instead.
 
@@ -132,7 +154,7 @@ First **classify each PR into exactly one state bucket** so drafts aren't double
 
 ### Step 10 — Generate and write the report, then stop
 
-Build the full markdown in memory (template below), then write it **once** to `<OUTPUT_DIR>/report-<YYYYMMDD>-<HHmmss>.md` (local date/time, so repeated runs don't collide). If Step 1 switched accounts, note that in the header. Print the absolute path. **Stop** — the file path is the entire deliverable.
+Build the full markdown in memory (template below), then write it **once** to `<OUTPUT_DIR>/report-<YYYYMMDD>-<HHmmss>.md` — the `<OUTPUT_DIR>` resolved in Step 3 — using local date/time so repeated runs don't collide. If Step 1 switched accounts, note that in the header. Print the absolute path. **Stop** — the file path is the entire deliverable.
 
 ## Report template
 
@@ -169,6 +191,7 @@ Build the full markdown in memory (template below), then write it **once** to `<
 - **Created**: <YYYY-MM-DD>
 - **Merged / Closed**: <YYYY-MM-DD> (<X> days) | _still open_
 - **URL**: <url>
+- **Ticket**: [<KEY>](<TRACKER_URL_BASE>/<KEY>)   ← only when Track B derived a key; omit otherwise
 - **Volume**: <changedFiles> files, +<additions> / −<deletions>, <commits> commits
 
 #### Commits
@@ -209,10 +232,11 @@ In single-PR mode, emit one `### #<num>` section and omit the `## Summary` aggre
 
 ### What NOT to do
 
-- **NEVER hardcode a username, org, output path, or automation account** — resolve the user (Step 1), default the window/output, and take scope + extra-bot accounts as input.
+- **NEVER hardcode a username, org, output path, tracker host, or automation account into the procedure** — resolve the user (Step 1); the output dir and tracker come from Configuration; default the window; take scope + extra-bot accounts as input.
 - **NEVER post, comment, push, or open anything.** Read-only; one local file is the only write.
+- **NEVER fetch an external tracker.** Track B renders a link built from Configuration — no API calls, no credentials, no tracker coupling.
 - **NEVER append to or merge with a prior report** — every run is a fresh, uniquely-timestamped file.
-- **NEVER fabricate a linked issue** — if the body has no `closes/fixes/resolves`, omit the issue block.
+- **NEVER fabricate a linked issue or ticket** — no `closes/fixes/resolves` match means no issue block; no key match means no ticket line.
 
 ### Format discipline
 
