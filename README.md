@@ -33,6 +33,12 @@ Every skill here is built to the same bar: **self-contained, opinionated, and co
 | [`pr-comments`](skills/pr-comments) | Triage a PR's review feedback — including AI-reviewer comments — into a judged task list: every item checked against repo facts and verdicted ACT / DISMISS / HUMAN with cited evidence. Never posts, never fixes. |
 | [`jira-dc`](skills/jira-dc) | Operate on a single Jira **Data Center** ticket over the DC REST API — read, comment, assign, transition, create — with a per-user PAT in a gitignored token file, stdin-fed auth that never hits argv, and every write drafted + confirmed before sending. |
 
+### Meetings & notes (Microsoft 365 MCP)
+
+| Skill | What it does |
+|---|---|
+| [`meeting-summary`](skills/meeting-summary) | Turn a recorded Teams meeting — from a SharePoint recording link, Teams link, or a name/date — into structured markdown notes: a transcript-grounded meeting note filed by series and date, plus append-only per-project docs. Requires the Microsoft 365 MCP connector. |
+
 ### Code generation (.NET)
 
 | Skill | What it does |
