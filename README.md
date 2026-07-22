@@ -33,6 +33,17 @@ Every skill here is built to the same bar: **self-contained, opinionated, and co
 | [`pr-comments`](skills/pr-comments) | Triage a PR's review feedback — including AI-reviewer comments — into a judged task list: every item checked against repo facts and verdicted ACT / DISMISS / HUMAN with cited evidence. Never posts, never fixes. |
 | [`jira-dc`](skills/jira-dc) | Operate on a single Jira **Data Center** ticket over the DC REST API — read, comment, assign, transition, create — with a per-user PAT in a gitignored token file, stdin-fed auth that never hits argv, and every write drafted + confirmed before sending. |
 
+### AI review feedback (suite)
+
+A four-skill pipeline for working through AI reviewer comments (GitHub Copilot + a Claude review bot) on a PR. The skills share one local state file (`docs/plans/ai-review-pr-<n>.md`) that carries the triaged items across sessions — each skill owns one stage and hands off to the next.
+
+| Skill | What it does |
+|---|---|
+| [`ai-comments`](skills/ai-comments) | Fetch the AI reviewer comments on a PR, read the code behind each finding, and triage them into SHOULD FIX / NITPICK / UNSURE with confidence ratings — asking about anything under 85% — saved to the state file. |
+| [`ai-next`](skills/ai-next) | Work exactly one triaged item to its checkpoint: implement the proposed fix, or record a deliberate defer/decline with a reply-grade rationale. One item per invocation. |
+| [`ai-draft`](skills/ai-draft) | Turn each resolved item's resolution into a 1–2 sentence reply in the PR author's voice, saved to the state file for review — never posted. |
+| [`ai-post`](skills/ai-post) | Gate on the service's tests + lint, post the drafted replies (in-thread to Copilot, one quote-reply per Claude review), then watch CI to green — diagnosing red runs and committing fixes only on explicit approval. |
+
 ### Meetings & notes (Microsoft 365 MCP)
 
 | Skill | What it does |
