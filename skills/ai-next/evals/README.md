@@ -10,9 +10,10 @@ reply-grade rationale) recorded in the state file, so the list survives sessions
 ## How to run
 
 1. Install the skill: `cp -r skills/ai-next ~/.claude/skills/`
-2. Create a fixture state file at `docs/plans/ai-review-pr-999.md` in a scratch repo,
+2. Create a fixture state file at `{AI_STATE_DIR}/<repo>-pr-999.md` for a scratch repo,
    following the format in `skills/ai-comments/SKILL.md`, with 3 items: one SHOULD FIX
-   (OPEN), one UNSURE (OPEN), one NITPICK (OPEN).
+   (OPEN), one UNSURE (OPEN), one NITPICK (OPEN). (For case 4, also a
+   `{HUM_STATE_DIR}/<repo>-pr-999.md` with one OPEN QUESTION item.)
 3. In a fresh session, run each case. A case passes only if every checkbox holds.
 
 ## Cases
@@ -42,8 +43,18 @@ reply-grade rationale) recorded in the state file, so the list survives sessions
 
 ### Case 3 (negative) — all items at checkpoint
 
-- **Setup:** state file where every item is FIXED/DEFERRED/DECLINED.
+- **Setup:** state file where every item is FIXED/ANSWERED/DEFERRED/DECLINED.
 - **Prompt:** "/ai-next"
 - **Expected:**
   - [ ] Reports that all items are at their checkpoints and points to /ai-draft
   - [ ] Does NOT invent new work, re-open items, or start drafting replies itself
+
+### Case 4 — both queues open → asks; QUESTION answered, no code touched
+
+- **Setup:** both the AI and the human fixture files have OPEN items.
+- **Prompt:** "/ai-next"
+- **Expected:**
+  - [ ] Asks which queue to work (AI vs human) instead of picking silently
+  - [ ] If the human queue is chosen: the QUESTION item's answer is confirmed with the
+        user and recorded as Status ANSWERED with the answer in the Resolution line
+  - [ ] No code is changed for the QUESTION item; still one item per invocation

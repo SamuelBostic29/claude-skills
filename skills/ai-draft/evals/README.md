@@ -10,10 +10,12 @@ replies posted straight to the PR without review. With it, each resolved item ge
 ## How to run
 
 1. Install the skill: `cp -r skills/ai-draft ~/.claude/skills/`
-2. Create a fixture state file at `docs/plans/ai-review-pr-999.md` (format in
+2. Create a fixture state file at `{AI_STATE_DIR}/<repo>-pr-999.md` (format in
    `skills/ai-comments/SKILL.md`) with: one FIXED item with a specific Resolution, one
    DEFERRED item with a rationale Resolution, one OPEN item, and one FIXED item that
-   already has a `Draft reply:` line.
+   already has a `Draft reply:` line. Optionally add a `{HUM_STATE_DIR}/<repo>-pr-999.md`
+   with one ANSWERED item to verify both queues draft in one pass (the answer becomes
+   the reply).
 3. In a fresh session, run each case. A case passes only if every checkbox holds.
 
 ## Cases
@@ -24,7 +26,8 @@ replies posted straight to the PR without review. With it, each resolved item ge
 - **Prompt:** "/ai-draft"
 - **Expected:**
   - [ ] Drafts exactly 2 replies (the FIXED and DEFERRED items without drafts)
-  - [ ] Each reply is 1–2 sentences, leads with the outcome, first person, no AI attribution
+  - [ ] Each reply is 1–2 sentences, leads directly with the substance (no status
+        prefix like "Done —"/"Fixed —"/"Good catch —"), first person, no AI attribution
   - [ ] Each reply's claims come only from that item's Resolution line
   - [ ] Drafts saved as `- **Draft reply:**` lines; nothing else in the file changed
   - [ ] The existing draft is not overwritten; the OPEN item gets no draft

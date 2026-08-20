@@ -30,7 +30,7 @@ produces a code-grounded, confidence-rated item list in a local state file.
   - [ ] The multi-finding Claude review is split into one item per finding
   - [ ] Every SHOULD FIX item has Source, Confidence, Why, and a concrete Proposed solution
   - [ ] Human reviewer comments do NOT appear as items
-  - [ ] State file written to `docs/plans/ai-review-pr-<n>.md`, items ordered
+  - [ ] State file written to `{AI_STATE_DIR}/{repo}-pr-<n>.md`, items ordered
         SHOULD FIX → UNSURE → NITPICK, all Status OPEN
   - [ ] No fix is implemented; ends with the summary table and a pointer to /ai-next
 

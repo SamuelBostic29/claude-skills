@@ -30,6 +30,14 @@ categorizing from the comment text alone without reading the code, which produce
 confident-sounding but wrong verdicts. Read the code first, always. You triage only;
 fixing starts with /ai-next.
 
+## Configuration (set per adopter)
+
+| Key | Default | Used for |
+| --- | --- | --- |
+| `AI_STATE_DIR` | `docs/plans/ai-review/` | Where state files live. Point at a global folder (outside any repo) to keep them long-term across repos. |
+
+State file path: `{AI_STATE_DIR}/{repo}-pr-{n}.md`.
+
 ## When to use this skill
 
 - "Pull / triage / categorize the AI comments" on a PR
@@ -41,7 +49,7 @@ fixing starts with /ai-next.
 - Working through an already-triaged list — use `/ai-next`.
 - Drafting or posting replies — use `/ai-draft` / `/ai-post`.
 - Reviewing the PR yourself — this skill only ingests *other* reviewers' AI comments.
-- Human reviewer comments — out of scope entirely; never ingest them.
+- Human reviewer comments — use `/hum-comments`; the queues stay separate.
 
 ## Steps
 
@@ -78,9 +86,10 @@ fixing starts with /ai-next.
    that would settle it via AskUserQuestion (batch related ones). Re-categorize with the
    answers. Anything the user can't settle now stays UNSURE in the file.
 
-7. **Write the state file** to `docs/plans/ai-review-pr-{n}.md` (create `docs/plans/` if
-   missing) in the format below, items ordered SHOULD FIX → UNSURE → NITPICK. This file
-   is local working state — **never commit it**.
+7. **Write the state file** to `{AI_STATE_DIR}/{repo}-pr-{n}.md` (create the folder if
+   missing) in the format below, items ordered SHOULD FIX → UNSURE → NITPICK, with the
+   PR title, repo, and today's date in the header — these files are kept long-term.
+   If `AI_STATE_DIR` is inside a repo, **never commit the file**.
 
 8. **Stop.** Print the summary table (below) and point to `/ai-next` to start working
    the first item. Do not begin fixing anything.
@@ -90,7 +99,7 @@ fixing starts with /ai-next.
 Chat summary, most important first:
 
 ```
-Triaged PR #123 — 7 AI findings (4 should-fix, 2 nitpicks, 1 unsure) → docs/plans/ai-review-pr-123.md
+Triaged PR #123 — 7 AI findings (4 should-fix, 2 nitpicks, 1 unsure) → <AI_STATE_DIR>/repo-pr-123.md
 
 | # | Cat        | Source  | Conf | Finding                          |
 |---|------------|---------|------|----------------------------------|
@@ -99,14 +108,15 @@ Triaged PR #123 — 7 AI findings (4 should-fix, 2 nitpicks, 1 unsure) → docs/
 Next: /ai-next
 ```
 
-State file (`docs/plans/ai-review-pr-{n}.md`) — the contract the whole suite reads:
+State file (`{AI_STATE_DIR}/{repo}-pr-{n}.md`) — the contract the whole suite reads:
 
 ```markdown
 # AI Review — PR #123: <title>
-<!-- ai-review suite state (/ai-comments → /ai-next → /ai-draft → /ai-post). Local only — never commit. -->
+<!-- ai-review suite state (/ai-comments → /ai-next → /ai-draft → /ai-post). Kept long-term — never commit, never prune. -->
 
 - Repo: <owner>/<repo>
 - PR: <url>
+- Intake date: <yyyy-mm-dd>
 - Head at last intake: <sha>
 
 ## Items
@@ -140,9 +150,10 @@ Later skills append to each item: `- **Resolution:**` + Status change (/ai-next)
 
 ### What NOT to do
 
-- **NEVER ingest human comments.** AI reviewers only — humans get human attention.
+- **NEVER ingest human comments.** AI reviewers only — humans go through /hum-comments.
 - **NEVER start fixing.** Triage ends at the state file; /ai-next owns implementation.
-- **NEVER commit the state file** or add it to the index.
+- **NEVER commit the state file** (when it lands inside a repo) **and never prune it** —
+  worked history stays; the files double as a long-term record.
 - **Don't inflate the list.** A Claude review that says "no issues found" produces zero
   items, not a synthetic "looks good" entry.
 

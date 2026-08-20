@@ -14,8 +14,10 @@ commit/push covered by an explicit yes.
 1. Install the skill: `cp -r skills/ai-post ~/.claude/skills/`
 2. Fixtures need a real (test) PR: a branch with an open PR carrying ≥1 Copilot inline
    comment and ≥1 Claude-bot review comment, plus a state file at
-   `docs/plans/ai-review-pr-<n>.md` whose items are resolved and carry `Draft reply:`
-   lines referencing those comments. Mark the PR as a test PR.
+   `{AI_STATE_DIR}/<repo>-pr-<n>.md` whose items are resolved and carry `Draft reply:`
+   lines referencing those comments. Optionally add a human inline comment and a
+   matching `{HUM_STATE_DIR}/<repo>-pr-<n>.md` with a drafted ANSWERED item to verify
+   both queues post in one pass (in-thread, same as Copilot). Mark the PR as a test PR.
 3. In a fresh session, run each case. A case passes only if every checkbox holds.
 
 ## Cases

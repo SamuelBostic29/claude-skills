@@ -2,11 +2,12 @@
 name: ai-post
 version: 1.0.0
 description: |
-  Finish an AI-review cycle: gate on the service's unit tests + lint, post the reviewed
-  draft replies to the PR (inline replies to Copilot, quote-replies to the Claude bot's
-  Code Review header), then watch the PR's CI — diagnosing any red run, and after the
-  user approves a fix, committing, pushing, and re-watching until everything is green.
-  Use when the user says "/ai-post", "post the replies", or "ship the review responses".
+  Finish a review cycle: gate on the service's unit tests + lint, post the reviewed
+  draft replies to the PR (inline replies to Copilot and human reviewers, quote-replies
+  to the Claude bot's Code Review header), then watch the PR's CI — diagnosing any red
+  run, and after the user approves a fix, committing, pushing, and re-watching until
+  everything is green. Use when the user says "/ai-post", "post the replies", or "ship
+  the review responses".
 allowed-tools:
   - Read
   - Edit
@@ -18,12 +19,19 @@ allowed-tools:
 
 # AI Post: post the drafted replies and babysit CI to green
 
-The AI-review items are resolved and their replies drafted and reviewed — invoking this
-skill is the user's "post it". Your job is to prove the branch is clean (tests + lint),
-publish every draft reply to the PR, then stay on the PR's CI until every check is green,
-looping through diagnose → ask → fix → commit → push as needed. The cardinal risk here is
-posting on a broken branch: replies saying "Fixed — …" pointing at code that doesn't
-pass. The gate runs first, always.
+The review items — AI queue, human queue, or both — are resolved and their replies
+drafted and reviewed — invoking this skill is the user's "post it". Your job is to prove
+the branch is clean (tests + lint), publish every draft reply to the PR, then stay on
+the PR's CI until every check is green, looping through diagnose → ask → fix → commit →
+push as needed. The cardinal risk here is posting on a broken branch: replies saying
+"Fixed — …" pointing at code that doesn't pass. The gate runs first, always.
+
+## Configuration (set per adopter — must match the comments skills)
+
+| Key | Default |
+| --- | --- |
+| `AI_STATE_DIR` | `docs/plans/ai-review/` |
+| `HUM_STATE_DIR` | `docs/plans/hum-review/` |
 
 ## When to use this skill
 
@@ -41,10 +49,11 @@ pass. The gate runs first, always.
 
 ## Steps
 
-1. **Find the state file** (`docs/plans/ai-review-pr-*.md`; ask if several, stop if
-   none). Read it. Collect items with a `Draft reply:` line and no `Posted:` line.
-   If none, report and stop. If some items are still OPEN, ask: post the drafted subset,
-   or stop and finish /ai-next first.
+1. **Find the state file(s).** Check both `AI_STATE_DIR` and `HUM_STATE_DIR` for files
+   matching the current repo/PR (or the passed path/queue); posting covers every match
+   in one pass. Read them and collect items with a `Draft reply:` line and no `Posted:`
+   line. If none, report and stop. If some items are still OPEN, ask: post the drafted
+   subset, or stop and finish /ai-next first.
 
 2. **Gate: tests + lint.** Discover the service's own commands — CI workflow files,
    `package.json` scripts, the build tool's conventions — and run its unit tests and its
@@ -59,11 +68,13 @@ pass. The gate runs first, always.
 
 4. **Post the replies.** Read `references/reply-mechanics.md` for the exact commands,
    then for each drafted item:
-   - **Copilot items:** reply inline to the source comment id.
+   - **Copilot and human inline items:** reply inline to the source comment id.
    - **Claude items:** group by source review comment; one quote-reply per review,
      quoting ONLY its `### Code Review` heading + scope paragraph, followed by each
      finding's draft reply as a bullet.
-   Mark each item `- **Posted:** yes` in the state file as it lands.
+   - **Human issue-level items:** reply as a PR comment quoting the first line of the
+     source comment.
+   Mark each item `- **Posted:** yes` in its state file as it lands.
 
 5. **Watch CI.** Run `gh pr checks {n} --watch` (in the background if long-running) and
    wait for all checks to settle.
@@ -84,8 +95,8 @@ pass. The gate runs first, always.
 Final report:
 
 ```
-Done — 6 replies posted on PR #123, CI green.
-- 4 inline replies to Copilot, 2 quote-replies to Claude reviews
+Done — 8 replies posted on PR #123, CI green.
+- 4 inline replies to Copilot, 2 quote-replies to Claude reviews, 2 inline replies to human reviewers
 - CI loop: 1 red (unit tests — <one-line cause>) → fixed in <sha>, re-run green
 ```
 

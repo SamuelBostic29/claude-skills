@@ -1,19 +1,32 @@
-# Reply mechanics — posting to Copilot and Claude, and watching CI
+# Reply mechanics — posting to Copilot, Claude, and human reviewers, and watching CI
 
 Read this from step 4 of `ai-post`. All commands run as the user's authed `gh` account —
 replies appear under their name.
 
-## Copilot: inline reply to the source comment
+## Copilot and human reviewers: inline reply to the source comment
 
-Copilot findings are pull-request review comments. Reply in-thread using the comment id
-recorded in the item's `Source:` line:
+Copilot findings and most human feedback are pull-request review comments. Reply
+in-thread using the comment id recorded in the item's `Source:` line:
 
 ```
 gh api repos/{owner}/{repo}/pulls/{pr}/comments/{comment_id}/replies -f body='<draft reply>'
 ```
 
-One reply per item. Do not open a new top-level comment for a Copilot finding — the
+One reply per item. Do not open a new top-level comment for an inline finding — the
 reply must land in the finding's thread.
+
+## Human issue-level comments: quoted PR comment
+
+A human comment left on the PR itself (not inline) has no reply thread. Post a PR
+comment that quotes the first line of their comment (prefixed `> `, truncated with `…`
+if long), a blank line, then the draft reply — enough for them to know what's being
+answered:
+
+```
+gh pr comment {pr} --repo {owner}/{repo} --body '> <first line of their comment…>
+
+<draft reply>'
+```
 
 ## Claude: quote-reply to the review's Code Review header
 
