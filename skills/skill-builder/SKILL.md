@@ -1,6 +1,5 @@
 ---
 name: skill-builder
-version: 1.0.0
 description: |
   Turn a brief problem statement plus optional repo context into a complete,
   repo-quality skill scaffolded from the template. Use when asked to build,
@@ -14,6 +13,8 @@ allowed-tools:
   - Write
   - Edit
   - AskUserQuestion
+metadata:
+  version: 1.1.0
 ---
 
 # Skill Builder: turn a one-line brief into a review-ready skill
@@ -46,11 +47,11 @@ The failure mode this skill exists to prevent is the **kitchen-sink skill**: a v
 
 5. **Scope to one job.** Distill the brief to a single crisp purpose. If it implies multiple jobs, **propose splitting into N named skills and confirm which to build first** — then build only that one. Do not scaffold until the scope is one job.
 
-6. **Scaffold.** Create the skill folder — `skills/<name>/` (portable) or the target repo's `.claude/skills/<name>/` (project) — and fill **every** placeholder: kebab `name` matching the folder, trigger-first `description`, **minimal** `allowed-tools` inferred from the job, When to use / When NOT to use, numbered Steps with explicit stop conditions, Output format, and the Rules triad.
+6. **Scaffold.** Create the skill folder — `skills/<name>/` (portable) or the target repo's `.claude/skills/<name>/` (project) — and fill **every** placeholder: kebab `name` matching the folder, trigger-first `description`, **minimal** `allowed-tools` inferred from the job, When to use / When NOT to use, numbered Steps with explicit stop conditions, Output format, and the Rules triad. Decide invocation control per the anatomy — side-effecting or user-timed job → `disable-model-invocation: true`; background knowledge → `user-invocable: false` — and if the skill takes input, wire `$ARGUMENTS` plus an `argument-hint`.
 
 7. **Layer 3 + evals.** Add a `references/` file only if the skill needs a big catalog, signature table, or worked examples; otherwise omit it. **Always** write `evals/README.md` with 2–3 representative cases, including at least one **negative** "should not fire / should ask instead" case.
 
-8. **Self-check.** Verify against the checklist in `references/skill-anatomy.md`: no surviving `<ANGLE_BRACKET>` (portable mode), `name` matches the folder, description leads with the trigger, `allowed-tools` is minimal, output is portable unless project mode was chosen. Fix anything that fails before reporting.
+8. **Self-check.** Verify against the checklist in `references/skill-anatomy.md`: no surviving `<ANGLE_BRACKET>` (portable mode), `name` matches the folder, description leads with the trigger, `allowed-tools` is minimal, frontmatter is spec-safe (custom data under `metadata:`, no stray top-level keys), body under 500 lines, output is portable unless project mode was chosen. Fix anything that fails before reporting.
 
 9. **Report & stop.** Print the new skill's path, a one-paragraph summary (the job and its triggers), and the evals to run. Do **not** install, commit, or push. Stop.
 
@@ -76,6 +77,7 @@ To try it: cp -r <path> ~/.claude/skills/ and run the evals in a fresh session.
 - **One job, always.** A skill has a single purpose. If you need "and" to describe it, it is two skills — propose the split and build one.
 - **Trigger-first description.** Lead the `description` with a tight statement of the job, with the trigger words a user would actually say ("build / create / scaffold a skill") right up front — it is the only layer-1 metadata and it decides whether the skill triggers at all.
 - **Minimal `allowed-tools`.** List only the tools the job needs. A read-only skill lists no `Write`/`Edit`/`Bash`. Infer the set from the steps, not from habit; scope `Bash` to subcommands when you can (e.g. `Bash(git status:*)`).
+- **Spec-safe frontmatter.** Default to the Agent Skills spec fields (`name`, `description`, `allowed-tools`, `metadata`); custom data like a version goes under `metadata:`, and Claude Code-only fields (invocation control, arguments, `context: fork`) appear only when the job needs them.
 - **Ask until the job is clear — by sufficiency, not a quota.** Ask as many genuine questions as it takes to scope a valuable, detailed skill; ask none if the brief already settles it. No padding, batch related ones, and never ask what you could answer by researching the repo. Ask, don't guess.
 - **Ship evals.** Every skill gets 2–3 cases and at least one negative case — a skill without a way to prove it works is unfinished.
 
