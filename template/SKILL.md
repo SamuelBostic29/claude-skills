@@ -14,7 +14,7 @@ correct-by-construction. Three things make a skill good here:
 
 Structure follows PROGRESSIVE DISCLOSURE — load context only as needed:
   - Layer 1: the frontmatter below (name + description). ALWAYS preloaded.
-  - Layer 2: this SKILL.md body. Loaded when the skill triggers. Keep it lean.
+  - Layer 2: this SKILL.md body. Loaded when the skill triggers. Keep it lean (<500 lines).
   - Layer 3: references/*.md. Loaded only when the body tells Claude to read them.
 
 Anything <IN_ANGLE_BRACKETS> is a placeholder for you to fill in. Search the
@@ -26,13 +26,12 @@ name: <skill-name>
 # ^ lowercase-kebab-case, matches the folder name. This is part of layer-1
 #   metadata and helps Claude decide when to trigger the skill.
 
-version: 0.1.0
-
 description: |
   <One or two sentences: WHAT this skill does AND WHEN Claude should use it.>
   <The description is the ONLY thing preloaded for every installed skill, and
    it is what Claude reads to decide whether to trigger this skill. Lead with
-   the trigger condition. Be concrete. Avoid "helps with" / "assists" filler.>
+   the trigger condition. Third person, max 1,024 chars, concrete. Avoid
+   "helps with" / "assists" filler.>
 
 allowed-tools:
   # Minimal set ONLY — list the exact tools this skill needs, nothing more.
@@ -46,6 +45,17 @@ allowed-tools:
   # - Bash
   # - AskUserQuestion
   # - Task
+
+# Optional fields — decide per skill (decision rules live in the skill-builder
+# skill's references/skill-anatomy.md):
+# disable-model-invocation: true   # user-only: side-effecting / user-timed workflows
+# user-invocable: false            # Claude-only: background knowledge, not a /command
+# argument-hint: "[<arg>]"         # if the skill takes input; reference it as $ARGUMENTS
+
+metadata:
+  version: 0.1.0
+  # ^ custom data lives under metadata: — a bare top-level version: (or any
+  #   other non-spec key) breaks claude.ai upload/packaging.
 ---
 
 # <Skill Name>: <one-line statement of the single job>
