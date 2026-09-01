@@ -16,6 +16,7 @@ Every skill here is built to the same bar: **self-contained, opinionated, and co
 | [`plan-next`](skills/plan-next) | Execute the next incomplete phase of a saved plan — implement it, update the file, then stop. |
 | [`plan-review`](skills/plan-review) | A convergence-oriented review of a saved plan: verdict first, blockers capped, "I don't understand" routed to questions instead of nitpicks. |
 | [`plan-from-issue`](skills/plan-from-issue) | Turn a GitHub issue (plus an optional story ticket) into a saved, phase-structured implementation plan — fetch the issue, synthesize the ask, ground it in code via `call-trace`, persist via `plan-save`. |
+| [`plan-to-ta`](skills/plan-to-ta) | Distill a saved implementation plan into a ticket's Technical Analysis — the "XYZ needs done, so we're doing ABC" design write-up, sized to the change (micro / layer-walk / contract / full-design), with every trace of execution machinery stripped. |
 
 ### Code understanding & review
 
